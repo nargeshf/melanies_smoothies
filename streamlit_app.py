@@ -28,8 +28,7 @@ sf_df = st.dataframe(data=smoothiefroot_response.json(), use_container_width=Tru
 
 
 #ingredients_list = st.multiselect(
-    #'Choose up to 5 ingredients:'
-    , my_dataframe)
+    #'Choose up to 5 ingredients:#', #my_dataframe)
 
 
 if ingredients_list:
