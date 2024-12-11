@@ -1,65 +1,50 @@
-# Import python packages
-import streamlit as st
-from snowflake.snowpark.functions import col
-import requests
+insert into smoothies.public.orders(ingredients)
+values ('Cantaloupe Guava Jackfruit Elderberries Figs ');
 
-# Write directly to the app
+select * from smoothies.public.orders;
 
-st.title(":cup_with_straw: Customize Your Smoothie! :cup_with_straw:")
-st.write(
-    """Choose the fruits you want in your custom Smoothie!
-    """)
+truncate table smoothies.public.orders;
 
-name_on_order = st.text_input('Name on Smoothie:')
-st.write('The name on your Smoothie will be:', name_on_order)
+alter table SMOOTHIES.PUBLIC.ORDERS ADD column ORDER_FILLED BOOLEAN DEFAULT FALSE;
 
 
-cnx = st.connection("snowflake")
-session = cnx.session()
-my_dataframe = session.table("smoothies.public.orders").filter(col("ORDER_FILLED")==0).collect()
+       update smoothies.public.orders
+       set order_filled = true
+       where name_on_order is null;
 
-smoothiefroot_response = requests.get("https://my.smoothiefroot.com/api/fruit/watermelon")
-sf_df = st.dataframe(data=smoothiefroot_response.json(), use_container_width=True)
+
+insert into smoothies.public.orders(ingredients,NAME_ON_ORDER) values ('Dragon Fruit Honeydew Guava Apples Kiwi','MellyMel');
 
 
 
-# Convert the Snowpark Dataframe to a Pandas Dataframe so we can use the LOC function
-pd_df = my_dataframe.to_pandas()
-st.dataframe(pd_df)
-# st.stop()
+truncate table SMOOTHIES.PUBLIC.ORDERS;
 
-ingredients_list = st.multiselect(
-    'Choose up to 5 ingredients:'
-    , my_dataframe
-    , max_selections=5
-)
-
-if ingredients_list:
-    ingredients_string = ''
-
-    for fruit_chosen in ingredients_list:
-        ingredients_string += fruit_chosen + ' '
-
-        search_on = pd_df.loc[pd_df['FRUIT_NAME'] == fruit_chosen, 'SEARCH_ON'].iloc[0]
-        st.write('The search value for ', fruit_chosen, ' is ', search_on, '.')
-
-        st.subheader(fruit_chosen + ' Nutrition Information')
-        fruityvice_response = requests.get("https://fruityvice.com/api/fruit/" + fruit_chosen)
-        fv_df = st.dataframe(data=fruityvice_response.json(), use_container_width=True)
+alter table SMOOTHIES.PUBLIC.ORDERS
+add column order_uid integer --adds the column
+default smoothies.public.order_seq.nextval --sets the value of the column to sequence
+constraint order_uid unique enforced; --makes sure there is always a unique value in the column
 
 
 
+og_dataset = session.table("smoothies.public.orders")
+    edited_dataset = session.create_dataframe(editable_df)
+    og_dataset.merge(edited_dataset
+                     , (og_dataset['ORDER_UID'] == edited_dataset['ORDER_UID'])
+                     , [when_matched().update({'ORDER_FILLED': edited_dataset['ORDER_FILLED']})]
 
-my_insert_stmt = """ insert into smoothies.public.orders(ingredients,name_on_order)
-values ('""" + ingredients_string + """','""" + name_on_order + """')"""
+
+                    );
 
 
-#st.write(my_insert_stmt)
-#st.stop()
+select * from ORDERS;
+alter table fruit_options add column SEARCH_ON TEXT;
 
-#st.write(my_insert_stmt)
-time_to_insert = st.button('Submit Order')
-if time_to_insert:
-    session.sql(my_insert_stmt).collect()
+-- copy name to seed the columns - then we can just edit the problem rows
+update fruit_options
+set search_on = SEARCH_ON;
 
-    st.success('Your Smoothie is ordered!',icon="✅")
+select * from fruit_options;
+
+update fruit_options
+set search_on = 'Apple'
+where SEARCH_ON = 'Apples';
