@@ -20,16 +20,11 @@ session = cnx.session()
 smoothiefroot_response = requests.get("https://my.smoothiefroot.com/api/fruit/watermelon")
 sf_df = st.dataframe(data=smoothiefroot_response.json(), use_container_width=True)
 
-# Convert the Snowpark Dataframe to a Pandas Dataframe so we can use the LOC function
-#pd_df = my_dataframe.to_pandas()
-#st.dataframe(pd_df)
-#st.stop()
+#Convert the Snowpark Dataframe to a Pandas Dataframe so we can use the LOC function
+pd_df = my_dataframe.to_pandas()
+st.dataframe(pd_df)
 
-
-
-#ingredients_list = st.multiselect(
-    #'Choose up to 5 ingredients:#', #my_dataframe)
-ingredients_string = ''
+ingredients_list = st.multiselect('Choose up to 5 ingredients:', my_dataframe)
 
 if ingredients_list:
     ingredients_string = ''
